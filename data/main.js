@@ -942,9 +942,8 @@ function displayKanjiList(level, type) {
   }
   if (!container) return;
   if (!kanjiListToShow || kanjiListToShow.length === 0) {
-    container.innerHTML = `<p>${
-      sourceName ? sourceName + " " : ""
-    }${levelName} 한자 목록이 없거나 준비되지 않았습니다.</p>`;
+    container.innerHTML = `<p>${sourceName ? sourceName + " " : ""
+      }${levelName} 한자 목록이 없거나 준비되지 않았습니다.</p>`;
     showMessage(
       `${sourceName ? sourceName + " " : ""}${levelName} 한자 목록 없음.`
     );
@@ -1007,13 +1006,24 @@ function normalizeKanji(kanji) {
 // Add this function to load the data files
 async function loadDataFiles() {
   try {
-    const [kanjiResponse, naverResponse] = await Promise.all([
-      fetch("data/kanjiData_normalization.json"),
+    // Wait for all required files to load
+    const [naverResponse, kanjiDataResponse, mainJsResponse, stylesResponse] = await Promise.all([
       fetch("data/get_naver_hanja_details.json"),
+      fetch("data/kanjiData.js"),
+      fetch("data/main.js"),
+      fetch("data/styles.css")
     ]);
 
-    kanjiData = await kanjiResponse.json();
+    // Check if all responses are ok
+    if (!naverResponse.ok || !kanjiDataResponse.ok || !mainJsResponse.ok || !stylesResponse.ok) {
+      throw new Error("One or more required files failed to load");
+    }
+
+    // Load the data
     naverData = await naverResponse.json();
+
+    // Show loading message
+    showMessage("데이터 로드 완료. 준비되었습니다.");
   } catch (error) {
     console.error("Error loading data files:", error);
     showMessage("데이터 파일 로드 중 오류가 발생했습니다.");
@@ -1063,7 +1073,7 @@ function handleSearch(input) {
     const searchResults = document.getElementById("searchResults");
     const searchResultContent = document.getElementById("searchResultContent");
 
-    if (!kanjiData || !naverData) {
+    if (!naverData) {
       searchResults.style.display = "none";
       return;
     }
@@ -1072,19 +1082,15 @@ function handleSearch(input) {
     let matches = Object.entries(naverData).filter(([kanji, data]) => {
       // 1. Category filters (both main and sub)
       if (activeCategory !== "all") {
-        const categories = kanjiData[kanji]?.all_categories || [];
-        const hasCategory = categories.some((cat) => {
-          if (typeof cat !== "string") return false;
-          const [type, value] = cat.trim().toLowerCase().split(":");
-
-          // Check main category
-          if (type !== activeCategory) return false;
-
-          // If subcategory is 'all', only check main category
-          if (activeSubCategory === "all") return value && value !== "none";
-
-          // Check subcategory
-          return value === activeSubCategory.toLowerCase();
+        const categories = data.naver_data.additional_info || [];
+        const hasCategory = categories.some((info) => {
+          if (info.category === activeCategory) {
+            // If subcategory is 'all', only check main category
+            if (activeSubCategory === "all") return true;
+            // Check subcategory
+            return info.description.includes(activeSubCategory);
+          }
+          return false;
         });
         if (!hasCategory) return false;
       }
@@ -1158,7 +1164,7 @@ function handleSearch(input) {
 
     // Add results
     currentPageResults.forEach(([kanji, data]) => {
-      const categories = kanjiData[kanji]?.all_categories || [];
+      const categories = data.naver_data.additional_info || [];
       const pronunciations =
         data.naver_data.basic_info.pronunciations.join(", ");
       const hunMeanings = data.naver_data.basic_info.hun_meanings.join(", ");
@@ -1176,29 +1182,28 @@ function handleSearch(input) {
                 <div class="kanji-meaning">의미: ${meanings}</div>
                 <div class="kanji-categories">
                   ${categories
-                    .map((cat) => {
-                      const [type, level] = cat.split(":");
-                      if (level === "None") return "";
-                      const typeName =
-                        type === "jlpt"
-                          ? "JLPT"
-                          : type === "kanken"
-                          ? "일본한자능력검정시험"
-                          : type === "gakunen"
-                          ? ""
-                          : type === "kakusuu"
-                          ? ""
-                          : type === "bushu"
-                          ? "부수: "
-                          : type === "shinbun"
+          .map((info) => {
+            if (info.description === "None") return "";
+            const typeName =
+              info.category === "jlpt"
+                ? "JLPT"
+                : info.category === "kanken"
+                  ? "일본한자능력검정시험"
+                  : info.category === "gakunen"
+                    ? ""
+                    : info.category === "kakusuu"
+                      ? ""
+                      : info.category === "bushu"
+                        ? "부수: "
+                        : info.category === "shinbun"
                           ? "신문 사용 빈도: "
-                          : type === "jinmeiyou"
-                          ? ""
-                          : type;
-                      return `<span class="category-tag ${type}">${typeName} ${level}</span>`;
-                    })
-                    .filter((tag) => tag !== "")
-                    .join("")}
+                          : info.category === "jinmeiyou"
+                            ? ""
+                            : info.category;
+            return `<span class="category-tag ${info.category}">${typeName} ${info.description}</span>`;
+          })
+          .filter((tag) => tag !== "")
+          .join("")}
                 </div>
               </div>
             </div>
@@ -1259,45 +1264,73 @@ function handleSearch(input) {
       pageInput.style.fontSize = "1.1em";
       pageInput.style.boxSizing = "border-box";
       pageInput.style.margin = "0"; // margin 제거
-      // 바로 이동 (oninput)
-      pageInput.oninput = () => {
-        let val = parseInt(pageInput.value, 10);
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > totalPages) val = totalPages;
-        currentSearchPage = val;
-        handleSearch(input);
-      };
-      // 엔터/포커스아웃도 안전하게 처리
-      pageInput.onkeydown = (e) => {
-        if (e.key === "Enter") {
+
+      // 모바일 환경에서는 입력 시 바로 갱신하지 않고, 키보드 확인 버튼을 통해 갱신
+      if (window.innerWidth <= 768) {
+        // 모바일에서는 oninput 이벤트 제거
+        pageInput.oninput = null;
+
+        // 포커스아웃 시에도 갱신하지 않음
+        pageInput.onblur = null;
+
+        // 마우스 휠 이벤트도 제거
+        pageInput.removeEventListener("wheel", null);
+
+        // 엔터키(키보드 확인 버튼)로만 갱신
+        pageInput.onkeydown = (e) => {
+          if (e.key === "Enter") {
+            let val = parseInt(pageInput.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > totalPages) val = totalPages;
+            currentSearchPage = val;
+            handleSearch(input);
+          }
+        };
+      } else {
+        // 데스크탑에서는 입력할 때마다 갱신
+        pageInput.oninput = () => {
           let val = parseInt(pageInput.value, 10);
           if (isNaN(val) || val < 1) val = 1;
           if (val > totalPages) val = totalPages;
           currentSearchPage = val;
           handleSearch(input);
-        }
-      };
-      pageInput.onblur = () => {
-        let val = parseInt(pageInput.value, 10);
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > totalPages) val = totalPages;
-        currentSearchPage = val;
-        handleSearch(input);
-      };
-      // 마우스 휠로 페이지 조절
-      pageInput.addEventListener(
-        "wheel",
-        function (event) {
-          event.preventDefault();
-          let val = parseInt(pageInput.value, 10) || 1;
-          if (event.deltaY < 0) val = Math.min(val + 1, totalPages); // up
-          else if (event.deltaY > 0) val = Math.max(val - 1, 1); // down
-          pageInput.value = val;
+        };
+
+        // 엔터키로도 갱신
+        pageInput.onkeydown = (e) => {
+          if (e.key === "Enter") {
+            let val = parseInt(pageInput.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > totalPages) val = totalPages;
+            currentSearchPage = val;
+            handleSearch(input);
+          }
+        };
+
+        // 포커스아웃 시에도 갱신
+        pageInput.onblur = () => {
+          let val = parseInt(pageInput.value, 10);
+          if (isNaN(val) || val < 1) val = 1;
+          if (val > totalPages) val = totalPages;
           currentSearchPage = val;
           handleSearch(input);
-        },
-        { passive: false }
-      );
+        };
+
+        // 마우스 휠로 페이지 조절
+        pageInput.addEventListener(
+          "wheel",
+          function (event) {
+            event.preventDefault();
+            let val = parseInt(pageInput.value, 10) || 1;
+            if (event.deltaY < 0) val = Math.min(val + 1, totalPages); // up
+            else if (event.deltaY > 0) val = Math.max(val - 1, 1); // down
+            pageInput.value = val;
+            currentSearchPage = val;
+            handleSearch(input);
+          },
+          { passive: false }
+        );
+      }
       paginationContainer.appendChild(pageInput);
 
       // Total pages
@@ -1858,9 +1891,9 @@ function toggleElementHighlight(elementKeysStr) {
     b.classList.toggle(
       "active",
       highlightedElement &&
-        Array.isArray(highlightedElement) &&
-        highlightedElement.length === bKeys.length &&
-        highlightedElement.every((k, i) => k === bKeys[i])
+      Array.isArray(highlightedElement) &&
+      highlightedElement.length === bKeys.length &&
+      highlightedElement.every((k, i) => k === bKeys[i])
     );
   });
 
@@ -1948,8 +1981,7 @@ function renderGuideStrokes() {
       );
     else
       showMessage(
-        `'${currentKanji}' - 획 ${
-          currentStrokeDisplayIndex + 1
+        `'${currentKanji}' - 획 ${currentStrokeDisplayIndex + 1
         } / ${totalStrokes} 다음 힌트 표시 중.`
       );
   } else if (!currentKanji) {
@@ -2266,6 +2298,8 @@ if (penWidthInput) {
     else e.target.value = userCtx ? userCtx.lineWidth : 3.0; // Reset if invalid
   });
 }
+// ... existing code ...
+
 if (resetKanjiBtn) {
   resetKanjiBtn.addEventListener("click", () => {
     if (animationFrameId || isAnimatingAll) return;
@@ -2694,8 +2728,8 @@ if (searchKanjiBtn) {
       searchModal.style.display = "flex";
       // Trigger initial search when modal opens
       handleSearch("");
-      // Optional: Focus the modal input
-      if (modalKanjiInput) modalKanjiInput.focus();
+      // Focus the modal input only on desktop
+      if (modalKanjiInput && window.innerWidth > 768) modalKanjiInput.focus();
     }
   });
 }
@@ -2791,18 +2825,18 @@ function showRadicalInfoModal(kanji) {
           type === "jlpt"
             ? "JLPT"
             : type === "kanken"
-            ? "일본한자능력검정시험"
-            : type === "gakunen"
-            ? ""
-            : type === "kakusuu"
-            ? ""
-            : type === "bushu"
-            ? "부수: "
-            : type === "shinbun"
-            ? "신문 사용 빈도: "
-            : type === "jinmeiyou"
-            ? ""
-            : type;
+              ? "일본한자능력검정시험"
+              : type === "gakunen"
+                ? ""
+                : type === "kakusuu"
+                  ? ""
+                  : type === "bushu"
+                    ? "부수: "
+                    : type === "shinbun"
+                      ? "신문 사용 빈도: "
+                      : type === "jinmeiyou"
+                        ? ""
+                        : type;
         return `<span class="category-tag ${type}">${typeName} ${level}</span>`;
       })
       .filter((tag) => tag !== "")
@@ -2891,13 +2925,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.classList.add("modal-open");
   }
 
-  // Search button click handler
+  // Mobile Search button click handler
   mobileSearchBtn.addEventListener("click", () => {
     closeAllMobileModals();
     mobileSearchBtn.classList.add("active");
     if (searchModal) {
       searchModal.style.display = "flex";
-      if (modalKanjiInput) modalKanjiInput.focus();
+      // Remove automatic focus for mobile
       handleSearch("");
     }
   });
@@ -2959,6 +2993,34 @@ document.addEventListener("DOMContentLoaded", function () {
     originalDisplayAllPageMeanings(kanji);
     syncMeaningsDisplay();
   };
+
+  // Add mobile pen width input handling
+  const mobilePenWidthInput = document.getElementById("mobilePenWidthInput");
+  if (mobilePenWidthInput) {
+    // Remove input event listener to prevent real-time updates
+
+    // Add change event listener for when user finishes editing
+    mobilePenWidthInput.addEventListener("change", (e) => {
+      let width = parseFloat(e.target.value);
+      if (isNaN(width)) width = 3.0;
+      width = Math.max(0.1, Math.min(10.0, width));
+      e.target.value = width.toFixed(1);
+      updatePenStyle();
+    });
+
+    // Add keydown event listener for Enter key
+    mobilePenWidthInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Prevent form submission
+        let width = parseFloat(e.target.value);
+        if (isNaN(width)) width = 3.0;
+        width = Math.max(0.1, Math.min(10.0, width));
+        e.target.value = width.toFixed(1);
+        updatePenStyle();
+        e.target.blur(); // Remove focus after Enter
+      }
+    });
+  }
 });
 
 // --- 모바일에서 canvasContainer를 정사각형으로 맞추는 코드 ---
