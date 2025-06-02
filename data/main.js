@@ -1,4 +1,4 @@
-/**
+ㄹ/**
  * KanjiVG 한자 사전
  *
  * 이 파일은 KanjiVG 한자 사전을 위한 메인 JavaScript 파일입니다.
@@ -1982,7 +1982,7 @@ function renderGuideStrokes() {
     else
       showMessage(
         `'${currentKanji}' - 획 ${currentStrokeDisplayIndex + 1
-        } / ${totalStrokes} 다음 힌트 표시 중.`
+        } / ${totalStrokes} 다음 획 표시 중.`
       );
   } else if (!currentKanji) {
     showMessage("한자를 입력하거나 왼쪽 메뉴에서 선택하세요.");
