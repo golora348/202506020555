@@ -1,4 +1,4 @@
-ㄹ/**
+/**
  * KanjiVG 한자 사전
  *
  * 이 파일은 KanjiVG 한자 사전을 위한 메인 JavaScript 파일입니다.
@@ -1007,15 +1007,21 @@ function normalizeKanji(kanji) {
 async function loadDataFiles() {
   try {
     // Wait for all required files to load
-    const [naverResponse, kanjiDataResponse, mainJsResponse, stylesResponse] = await Promise.all([
-      fetch("data/get_naver_hanja_details.json"),
-      fetch("data/kanjiData.js"),
-      fetch("data/main.js"),
-      fetch("data/styles.css")
-    ]);
+    const [naverResponse, kanjiDataResponse, mainJsResponse, stylesResponse] =
+      await Promise.all([
+        fetch("data/get_naver_hanja_details.json"),
+        fetch("data/kanjiData.js"),
+        fetch("data/main.js"),
+        fetch("data/styles.css"),
+      ]);
 
     // Check if all responses are ok
-    if (!naverResponse.ok || !kanjiDataResponse.ok || !mainJsResponse.ok || !stylesResponse.ok) {
+    if (
+      !naverResponse.ok ||
+      !kanjiDataResponse.ok ||
+      !mainJsResponse.ok ||
+      !stylesResponse.ok
+    ) {
       throw new Error("One or more required files failed to load");
     }
 
@@ -1977,7 +1983,7 @@ function renderGuideStrokes() {
       showMessage(`'${currentKanji}' - 모든 획 표시 완료 (${totalStrokes}획)`);
     else if (currentStrokeDisplayIndex === -1)
       showMessage(
-        `'${currentKanji}' 로드 (${totalStrokes}획). '다음 획' 또는 '애니메이션' 시작.`
+        `'${currentKanji}' 로드 (${totalStrokes}획).`
       );
     else
       showMessage(
