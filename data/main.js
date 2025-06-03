@@ -522,14 +522,14 @@ const subCategories = {
   jinmeiyou: ["통상 사용 한자", "제한 사용 한자"],
 };
 
-// Function to get subcategories from kanjiData
+// Function to get subcategories from naverData
 function getSubCategories(mainCategory) {
-  if (!kanjiData) return [];
+  if (!naverData) return [];
 
   const subCategories = new Set();
 
   // Iterate through all kanji data to collect unique subcategories
-  Object.entries(kanjiData).forEach(([kanji, data]) => {
+  Object.entries(naverData).forEach(([kanji, data]) => {
     if (data.all_categories) {
       data.all_categories.forEach((cat) => {
         if (typeof cat === "string") {
@@ -1183,7 +1183,6 @@ function displayKanjiList(level, type) {
 }
 
 // Add these variables at the top with other global variables
-let kanjiData = null;
 let naverData = null;
 
 // Add this function before loadKanjiData
@@ -1195,12 +1194,10 @@ function normalizeKanji(kanji) {
 // Add this function to load the data files
 async function loadDataFiles() {
   try {
-    const [kanjiResponse, naverResponse] = await Promise.all([
-      fetch("data/kanjiData_normalization.json"),
+    const [naverResponse] = await Promise.all([
       fetch("data/get_naver_hanja_details.json"),
     ]);
 
-    kanjiData = await kanjiResponse.json();
     naverData = await naverResponse.json();
   } catch (error) {
     console.error("Error loading data files:", error);
@@ -1251,7 +1248,7 @@ function handleSearch(input) {
     const searchResults = document.getElementById("searchResults");
     const searchResultContent = document.getElementById("searchResultContent");
 
-    if (!kanjiData || !naverData) {
+    if (!naverData) {
       searchResults.style.display = "none";
       return;
     }
@@ -1260,7 +1257,7 @@ function handleSearch(input) {
     let matches = Object.entries(naverData).filter(([kanji, data]) => {
       // 1. Category filters (both main and sub)
       if (activeCategory !== "all") {
-        const categories = kanjiData[kanji]?.all_categories || [];
+        const categories = naverData[kanji]?.all_categories || [];
         const hasCategory = categories.some((cat) => {
           if (typeof cat !== "string") return false;
           const [type, value] = cat.trim().toLowerCase().split(":");
@@ -1346,7 +1343,7 @@ function handleSearch(input) {
 
     // Add results
     currentPageResults.forEach(([kanji, data]) => {
-      const categories = kanjiData[kanji]?.all_categories || [];
+      const categories = naverData[kanji]?.all_categories || [];
       const pronunciations =
         data.naver_data.basic_info.pronunciations.join(", ");
       const hunMeanings = data.naver_data.basic_info.hun_meanings.join(", ");
@@ -2966,11 +2963,11 @@ function showRadicalInfoModal(kanji) {
 
   // Set categories
   if (
-    kanjiData &&
-    kanjiData[normalizedKanji] &&
-    kanjiData[normalizedKanji].all_categories
+    naverData &&
+    naverData[normalizedKanji] &&
+    naverData[normalizedKanji].all_categories
   ) {
-    categories.innerHTML = kanjiData[normalizedKanji].all_categories
+    categories.innerHTML = naverData[normalizedKanji].all_categories
       .map((cat) => {
         const [type, level] = cat.split(":");
         if (level === "None") return "";
