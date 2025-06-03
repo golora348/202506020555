@@ -1,353 +1,300 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KanjiVG 한자 사전</title>
-    <link rel="stylesheet" href="data/styles.css" />
-    <script src="data/kanjiData.js"></script>
-  </head>
 
-  <body>
-    <div class="content-area" id="mainContentArea">
-      <div class="container-wrapper" id="mainContainerWrapper">
-        <div id="message">
-          한자 검색 버튼을 클릭하여 연습할 한자를 찾으세요.
-        </div>
-        <div class="main-container">
-          <div class="panel control-panel">
-            <h3>한자 검색 및 선택</h3>
-            <button id="searchKanjiBtn">한자 검색</button>
-            <hr />
-            <h3>그리기 및 보기 설정</h3>
-            <div class="settings-group">
-              <label for="renderingStyleSelect">획 스타일:</label>
-              <select id="renderingStyleSelect">
-                <option value="thin-pen">가는 펜</option>
-                <option value="standard" selected>표준</option>
-                <option value="thick-brush">굵은 붓</option>
-              </select>
-            </div>
-            <hr />
-            <div class="settings-group">
-              <label for="animationSpeedInput">애니메이션 속도:</label>
-              <input
-                type="number"
-                id="animationSpeedInput"
-                min="0.1"
-                max="10.0"
-                value="1.0"
-                step="0.1"
-              />
-              <span>x</span>
-            </div>
-            <div class="settings-group">
-              <label for="penColor">펜 색상:</label>
-              <input type="color" id="penColor" value="#FF0000" />
-            </div>
-            <div class="settings-group">
-              <label for="penWidthInput">펜 굵기:</label>
-              <input
-                type="number"
-                id="penWidthInput"
-                min="0.1"
-                max="10.0"
-                value="3.0"
-                step="0.1"
-              />
-              <span>px</span>
-            </div>
-            <div class="settings-group settings-group-grid-toggle">
-              <input type="checkbox" id="gridToggle" checked />
-              <label for="gridToggle">그리드 표시</label>
-            </div>
-            <div class="settings-group settings-group-clear-drawing">
-              <button id="clearUserDrawingBtn" disabled>내 그림 지우기</button>
-            </div>
-            <hr />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KanjiVG 한자 사전</title>
+  <link rel="stylesheet" href="data/styles.css" />
+  <script src="data/kanjiData.js"></script>
+</head>
+
+<body>
+  <div class="content-area" id="mainContentArea">
+    <div class="container-wrapper" id="mainContainerWrapper">
+      <div id="message">
+        한자 검색 버튼을 클릭하여 연습할 한자를 찾으세요.
+      </div>
+      <div class="main-container">
+        <div class="panel control-panel">
+          <h3>한자 검색 및 선택</h3>
+          <button id="searchKanjiBtn">한자 검색</button>
+          <hr />
+          <h3>그리기 및 보기 설정</h3>
+          <div class="settings-group">
+            <label for="renderingStyleSelect">획 스타일:</label>
+            <select id="renderingStyleSelect">
+              <option value="thin-pen">가는 펜</option>
+              <option value="standard" selected>표준</option>
+              <option value="thick-brush">굵은 붓</option>
+            </select>
           </div>
-          <div class="panel drawing-panel" id="mainDrawingPanel">
-            <div class="canvas-flex-col">
-              <div id="canvasContainer">
-                <canvas id="gridCanvas"></canvas>
-                <canvas id="guideCanvas"></canvas>
-                <canvas id="radicalHighlightCanvas"></canvas>
-                <canvas id="userCanvas"></canvas>
+          <hr />
+          <div class="settings-group">
+            <label for="animationSpeedInput">애니메이션 속도:</label>
+            <input type="number" id="animationSpeedInput" min="0.1" max="10.0" value="1.0" step="0.1" />
+            <span>x</span>
+          </div>
+          <div class="settings-group">
+            <label for="penColor">펜 색상:</label>
+            <input type="color" id="penColor" value="#FF0000" />
+          </div>
+          <div class="settings-group">
+            <label for="penWidthInput">펜 굵기:</label>
+            <input type="number" id="penWidthInput" min="0.1" max="10.0" value="3.0" step="0.1" />
+            <span>px</span>
+          </div>
+          <div class="settings-group settings-group-grid-toggle">
+            <input type="checkbox" id="gridToggle" checked />
+            <label for="gridToggle">그리드 표시</label>
+          </div>
+          <div class="settings-group settings-group-clear-drawing">
+            <button id="clearUserDrawingBtn" disabled>내 그림 지우기</button>
+          </div>
+          <hr />
+        </div>
+        <div class="panel drawing-panel" id="mainDrawingPanel">
+          <div class="canvas-flex-col">
+            <div id="canvasContainer">
+              <canvas id="gridCanvas"></canvas>
+              <canvas id="guideCanvas"></canvas>
+              <canvas id="radicalHighlightCanvas"></canvas>
+              <canvas id="userCanvas"></canvas>
+            </div>
+            <div class="drawing-controls">
+              <div id="hunMeanings">정보 없음</div>
+              <h3>획 재생 제어</h3>
+              <div class="button-group">
+                <button id="firstStrokeBtn" disabled>처음</button>
+                <button id="prevStrokeBtn" disabled>이전</button>
+                <button id="animateStrokeBtn" disabled>현재</button>
+                <button id="nextStrokeBtn" disabled>다음</button>
+                <button id="revealAllBtn" disabled>마지막</button>
+                <button id="animateAllStrokesBtn" disabled>
+                  전체 획 재생
+                </button>
               </div>
-              <div class="drawing-controls">
-                <div id="hunMeanings">정보 없음</div>
-                <h3>획 재생 제어</h3>
-                <div class="button-group">
-                  <button id="firstStrokeBtn" disabled>처음</button>
-                  <button id="prevStrokeBtn" disabled>이전</button>
-                  <button id="animateStrokeBtn" disabled>현재</button>
-                  <button id="nextStrokeBtn" disabled>다음</button>
-                  <button id="revealAllBtn" disabled>마지막</button>
-                  <button id="animateAllStrokesBtn" disabled>
+              <!-- 모바일 전용 버튼 그룹 -->
+              <div class="button-group mobile-only">
+                <div class="mobile-row">
+                  <button id="prevStrokeBtnMobile" disabled>이전</button>
+                  <button id="animateStrokeBtnMobile" disabled>현재</button>
+                  <button id="nextStrokeBtnMobile" disabled>다음</button>
+                </div>
+                <div class="mobile-row">
+                  <button id="firstStrokeBtnMobile" disabled>처음</button>
+                  <button id="revealAllBtnMobile" disabled>마지막</button>
+                </div>
+                <div class="mobile-row">
+                  <button id="animateAllStrokesBtnMobile" disabled style="width: 100%">
                     전체 획 재생
                   </button>
                 </div>
-                <!-- 모바일 전용 버튼 그룹 -->
-                <div class="button-group mobile-only">
-                  <div class="mobile-row">
-                    <button id="prevStrokeBtnMobile" disabled>이전</button>
-                    <button id="animateStrokeBtnMobile" disabled>현재</button>
-                    <button id="nextStrokeBtnMobile" disabled>다음</button>
-                  </div>
-                  <div class="mobile-row">
-                    <button id="firstStrokeBtnMobile" disabled>처음</button>
-                    <button id="revealAllBtnMobile" disabled>마지막</button>
-                  </div>
-                  <div class="mobile-row">
-                    <button
-                      id="animateAllStrokesBtnMobile"
-                      disabled
-                      style="width: 100%"
-                    >
-                      전체 획 재생
-                    </button>
-                  </div>
-                  <div class="mobile-row">
-                    <button
-                      id="mobileClearUserDrawingBtn"
-                      disabled
-                      style="width: 100%"
-                    >
-                      내 그림 지우기
-                    </button>
-                  </div>
+                <div class="mobile-row">
+                  <button id="mobileClearUserDrawingBtn" disabled style="width: 100%">
+                    내 그림 지우기
+                  </button>
                 </div>
-                <hr />
               </div>
+              <hr />
             </div>
           </div>
-          <div class="panel storage-panel">
-            <h3>추가 정보</h3>
-            <div class="radical-row">
-              <span>부수:</span><span id="radicalInsertPoint"></span>
-            </div>
-            <div class="shape-row" style="display: none">
-              <span>모양자:</span><span id="shapeInsertPoint"></span>
-            </div>
-            <div
-              class="kanji-meta-row"
-              style="
+        </div>
+        <div class="panel storage-panel">
+          <h3>추가 정보</h3>
+          <div class="radical-row">
+            <span>부수:</span><span id="radicalInsertPoint"></span>
+          </div>
+          <div class="shape-row" style="display: none">
+            <span>모양자:</span><span id="shapeInsertPoint"></span>
+          </div>
+          <div class="kanji-meta-row" style="
                 display: none;
                 gap: 16px;
                 margin: 8px 0;
                 font-size: 1em;
                 color: #444;
-              "
-            >
-              <span id="strokeCountInfo"></span>
-              <span id="unicodeInfo"></span>
-            </div>
-            <br />
-            <h3>상세 의미</h3>
-            <div id="allPageMeanings" class="all-page-meanings">
-              <p class="all-page-guide">
-                시작하려면 상단의 <b>'한자 검색'</b> 버튼을 클릭하여 연습할
-                한자를 찾아보세요.
-              </p>
-            </div>
+              ">
+            <span id="strokeCountInfo"></span>
+            <span id="unicodeInfo"></span>
+          </div>
+          <br />
+          <h3>상세 의미</h3>
+          <div id="allPageMeanings" class="all-page-meanings">
+            <p class="all-page-guide">
+              시작하려면 상단의 <b>'한자 검색'</b> 버튼을 클릭하여 연습할
+              한자를 찾아보세요.
+            </p>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Hidden SVG container for path calculations -->
-    <div id="hiddenSvgPathContainer" style="display: none"></div>
+  <!-- Hidden SVG container for path calculations -->
+  <div id="hiddenSvgPathContainer" style="display: none"></div>
 
-    <!-- Enhanced Search Modal -->
-    <div id="searchModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>한자 검색</h2>
-          <span class="modal-close" id="closeSearchModalBtn">&times;</span>
-        </div>
-        <div class="search-container">
-          <div class="search-input-and-type-filters-container">
-            <label>검색:</label>
-            <div class="search-type-filters">
-              <div class="search-type-filter active" data-type="all">전체</div>
-              <div class="search-type-filter" data-type="kanji">한자</div>
-              <div class="search-type-filter" data-type="on">음독</div>
-              <div class="search-type-filter" data-type="kun">훈독</div>
-              <div class="search-type-filter" data-type="meaning">의미</div>
-            </div>
-            <div class="search-input-container">
-              <input
-                type="text"
-                id="modalKanjiInput"
-                placeholder="한자, 음독, 훈독, 의미로 검색..."
-              />
-            </div>
+  <!-- Enhanced Search Modal -->
+  <div id="searchModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>한자 검색</h2>
+        <span class="modal-close" id="closeSearchModalBtn">&times;</span>
+      </div>
+      <div class="search-container">
+        <div class="search-input-and-type-filters-container">
+          <label>검색:</label>
+          <div class="search-type-filters">
+            <div class="search-type-filter active" data-type="all">전체</div>
+            <div class="search-type-filter" data-type="kanji">한자</div>
+            <div class="search-type-filter" data-type="on">음독</div>
+            <div class="search-type-filter" data-type="kun">훈독</div>
+            <div class="search-type-filter" data-type="meaning">의미</div>
+          </div>
+          <div class="search-input-container">
+            <input type="text" id="modalKanjiInput" placeholder="한자, 음독, 훈독, 의미로 검색..." />
           </div>
         </div>
-        <div class="category-filters">
-          <label>카테고리:</label>
-          <div class="category-buttons-container">
-            <select id="mainCategorySelect" class="category-select">
-              <option value="all">전체</option>
-              <option value="jlpt">JLPT</option>
-              <option value="kanken">일본한자능력검정시험</option>
-              <option value="gakunen">학년별</option>
-              <option value="kakusuu">획수별</option>
-              <option value="bushu">부수별</option>
-              <option value="shinbun">신문 사용 빈도</option>
-              <option value="jinmeiyou">인명용</option>
-            </select>
-            <select id="subCategorySelect" class="category-select" disabled>
-              <option value="all">전체</option>
-            </select>
-          </div>
-        </div>
-        <div class="search-results" id="searchResults">
-          <div id="searchResultContent"></div>
-        </div>
       </div>
-    </div>
-
-    <!-- Radical/Component Info Modal -->
-    <div id="radicalInfoModal" class="modal" style="display: none">
-      <div class="modal-content" style="max-width: 500px">
-        <div class="modal-header">
-          <h2>한자 정보</h2>
-          <span class="modal-close" id="closeRadicalInfoModalBtn">&times;</span>
-        </div>
-        <div id="radicalInfoContent" class="search-result-item">
-          <div class="search-result-header">
-            <div class="kanji-display"></div>
-            <div class="kanji-info">
-              <div class="kanji-pronunciation"></div>
-              <div class="kanji-pronunciation"></div>
-              <div class="kanji-meaning"></div>
-              <div class="kanji-categories"></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer" style="text-align: center; margin-top: 20px">
-          <button id="switchToKanjiBtn" class="primary-button">
-            이 한자로 전환
-          </button>
-          <button id="cancelSwitchBtn" class="secondary-button">취소</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer with attribution -->
-    <footer class="attribution-footer">
-      <div class="attribution-content">
-        <p>ⓒ</p>
-        <ul>
-          <li>
-            카테고리 및 기본 정보:
-            <a
-              href="https://www.nihongo-pro.com/jp/kanji-search"
-              target="_blank"
-              >NIHONGO PRO</a
-            >
-          </li>
-          <li>
-            상세 의미 및 사전 정보:
-            <a href="https://hanja.dict.naver.com/#/main" target="_blank"
-              >네이버 한자사전</a
-            >
-          </li>
-        </ul>
-      </div>
-    </footer>
-
-    <!-- Mobile Bottom Navigation -->
-    <div class="mobile-bottom-nav">
-      <button id="mobileSearchBtn">검색</button>
-      <button id="mobileSettingsBtn">설정</button>
-      <button id="mobileInfoBtn">추가 정보</button>
-      <button id="mobileMeaningsBtn">상세 의미</button>
-    </div>
-
-    <!-- Mobile Settings Modal -->
-    <div id="mobileSettingsModal" class="mobile-modal">
-      <div class="modal-content panel">
-        <div class="modal-header">
-          <h2>설정</h2>
-          <span class="modal-close">&times;</span>
-        </div>
-        <div class="settings-group">
-          <label for="renderingStyleSelect">획 스타일:</label>
-          <select id="mobileRenderingStyleSelect">
-            <option value="thin-pen">가는 펜</option>
-            <option value="standard" selected>표준</option>
-            <option value="thick-brush">굵은 붓</option>
+      <div class="category-filters">
+        <label>카테고리:</label>
+        <div class="category-buttons-container">
+          <select id="mainCategorySelect" class="category-select">
+            <option value="all">전체</option>
+            <option value="jlpt">JLPT</option>
+            <option value="kanken">일본한자능력검정시험</option>
+            <option value="gakunen">학년별</option>
+            <option value="kakusuu">획수별</option>
+            <option value="bushu">부수별</option>
+            <option value="shinbun">신문 사용 빈도</option>
+            <option value="jinmeiyou">인명용</option>
+          </select>
+          <select id="subCategorySelect" class="category-select" disabled>
+            <option value="all">전체</option>
           </select>
         </div>
-        <div class="settings-group">
-          <label for="animationSpeedInput">애니메이션 속도:</label>
-          <input
-            type="number"
-            id="mobileAnimationSpeedInput"
-            min="0.1"
-            max="10.0"
-            value="1.0"
-            step="0.1"
-          />
-          <span>x</span>
-        </div>
-        <div class="settings-group">
-          <label for="penColor">펜 색상:</label>
-          <input type="color" id="mobilePenColor" value="#FF0000" />
-        </div>
-        <div class="settings-group">
-          <label for="penWidthInput">펜 굵기:</label>
-          <input
-            type="number"
-            id="mobilePenWidthInput"
-            min="0.1"
-            max="10.0"
-            value="3.0"
-            step="0.1"
-          />
-          <span>px</span>
-        </div>
-        <div class="settings-group settings-group-grid-toggle">
-          <input type="checkbox" id="mobileGridToggle" checked />
-          <label for="mobileGridToggle">그리드 표시</label>
-        </div>
-        <!-- Remove the clear drawing button from here -->
+      </div>
+      <div class="search-results" id="searchResults">
+        <div id="searchResultContent"></div>
       </div>
     </div>
+  </div>
 
-    <!-- Mobile Info Modal -->
-    <div id="mobileInfoModal" class="mobile-modal">
-      <div class="modal-content panel">
-        <div class="modal-header">
-          <h2>추가 정보</h2>
-          <span class="modal-close">&times;</span>
-        </div>
-        <div class="radical-row">
-          <span>부수:</span><span id="mobileRadicalInsertPoint"></span>
-        </div>
-        <div class="shape-row">
-          <span>모양자:</span><span id="mobileShapeInsertPoint"></span>
-        </div>
-        <div class="kanji-meta-row">
-          <span id="mobileStrokeCountInfo"></span>
-          <span id="mobileUnicodeInfo"></span>
+  <!-- Radical/Component Info Modal -->
+  <div id="radicalInfoModal" class="modal" style="display: none">
+    <div class="modal-content" style="max-width: 500px">
+      <div class="modal-header">
+        <h2>한자 정보</h2>
+        <span class="modal-close" id="closeRadicalInfoModalBtn">&times;</span>
+      </div>
+      <div id="radicalInfoContent" class="search-result-item">
+        <div class="search-result-header">
+          <div class="kanji-display"></div>
+          <div class="kanji-info">
+            <div class="kanji-pronunciation"></div>
+            <div class="kanji-pronunciation"></div>
+            <div class="kanji-meaning"></div>
+            <div class="kanji-categories"></div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Mobile Meanings Modal -->
-    <div id="mobileMeaningsModal" class="mobile-modal">
-      <div class="modal-content panel">
-        <div class="modal-header">
-          <h2>상세 의미</h2>
-          <span class="modal-close">&times;</span>
-        </div>
-        <div id="mobileAllPageMeanings" class="all-page-meanings"></div>
+      <div class="modal-footer" style="text-align: center; margin-top: 20px">
+        <button id="switchToKanjiBtn" class="primary-button">
+          이 한자로 전환
+        </button>
+        <button id="cancelSwitchBtn" class="secondary-button">취소</button>
       </div>
     </div>
+  </div>
 
-    <script src="data/main.js"></script>
-  </body>
+  <!-- Footer with attribution -->
+  <footer class="attribution-footer">
+    <div class="attribution-content">
+      <p>ⓒ </p>
+      <ul>
+        <li>카테고리 및 기본 정보: <a href="https://www.nihongo-pro.com/jp/kanji-search" target="_blank">NIHONGO PRO</a></li>
+        <li>상세 의미 및 사전 정보: <a href="https://hanja.dict.naver.com/#/main" target="_blank">네이버 한자사전</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav">
+    <button id="mobileSearchBtn">검색</button>
+    <button id="mobileSettingsBtn">설정</button>
+    <button id="mobileInfoBtn">추가 정보</button>
+    <button id="mobileMeaningsBtn">상세 의미</button>
+  </div>
+
+  <!-- Mobile Settings Modal -->
+  <div id="mobileSettingsModal" class="mobile-modal">
+    <div class="modal-content panel">
+      <div class="modal-header">
+        <h2>설정</h2>
+        <span class="modal-close">&times;</span>
+      </div>
+      <div class="settings-group">
+        <label for="renderingStyleSelect">획 스타일:</label>
+        <select id="mobileRenderingStyleSelect">
+          <option value="thin-pen">가는 펜</option>
+          <option value="standard" selected>표준</option>
+          <option value="thick-brush">굵은 붓</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label for="animationSpeedInput">애니메이션 속도:</label>
+        <input type="number" id="mobileAnimationSpeedInput" min="0.1" max="10.0" value="1.0" step="0.1" />
+        <span>x</span>
+      </div>
+      <div class="settings-group">
+        <label for="penColor">펜 색상:</label>
+        <input type="color" id="mobilePenColor" value="#FF0000" />
+      </div>
+      <div class="settings-group">
+        <label for="penWidthInput">펜 굵기:</label>
+        <input type="number" id="mobilePenWidthInput" min="0.1" max="10.0" value="3.0" step="0.1" />
+        <span>px</span>
+      </div>
+      <div class="settings-group settings-group-grid-toggle">
+        <input type="checkbox" id="mobileGridToggle" checked />
+        <label for="mobileGridToggle">그리드 표시</label>
+      </div>
+      <!-- Remove the clear drawing button from here -->
+    </div>
+  </div>
+
+  <!-- Mobile Info Modal -->
+  <div id="mobileInfoModal" class="mobile-modal">
+    <div class="modal-content panel">
+      <div class="modal-header">
+        <h2>추가 정보</h2>
+        <span class="modal-close">&times;</span>
+      </div>
+      <div class="radical-row">
+        <span>부수:</span><span id="mobileRadicalInsertPoint"></span>
+      </div>
+      <div class="shape-row">
+        <span>모양자:</span><span id="mobileShapeInsertPoint"></span>
+      </div>
+      <div class="kanji-meta-row">
+        <span id="mobileStrokeCountInfo"></span>
+        <span id="mobileUnicodeInfo"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Meanings Modal -->
+  <div id="mobileMeaningsModal" class="mobile-modal">
+    <div class="modal-content panel">
+      <div class="modal-header">
+        <h2>상세 의미</h2>
+        <span class="modal-close">&times;</span>
+      </div>
+      <div id="mobileAllPageMeanings" class="all-page-meanings"></div>
+    </div>
+  </div>
+
+  <script src="data/main.js"></script>
+</body>
+
 </html>

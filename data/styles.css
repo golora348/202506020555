@@ -580,7 +580,7 @@ button#saveToNoteBtn:hover {
   border-color: #c82333;
 }
 
-.control-panel > hr {
+.control-panel>hr {
   border: 0;
   border-top: 1px solid #eee;
   margin: 15px 0;
@@ -800,7 +800,7 @@ body.modal-open {
   }
 
   .main-container,
-  .main-container > .panel.drawing-panel {
+  .main-container>.panel.drawing-panel {
     overflow: hidden !important;
     box-sizing: border-box !important;
     height: 100dvh !important;
@@ -906,6 +906,7 @@ body.modal-open {
 
   .drawing-panel .button-group button {
     padding: 7px 8px;
+    /* font-size: 0.85em;  기존 값을 주석 처리하거나 삭제하고 아래의 .button-group.mobile-only button 쪽으로 이동 */
   }
 
   .drawing-panel {
@@ -957,6 +958,12 @@ body.modal-open {
     flex-shrink: 0 !important;
   }
 
+  .mobile-bottom-nav button {
+    padding: 12px 0;
+    font-size: 15px;
+    border-radius: 0;
+  }
+
   .modal-content.panel .settings-group {
     display: flex;
     align-items: center;
@@ -983,11 +990,11 @@ body.modal-open {
     padding: 24px 20px 20px 20px;
   }
 
-  .main-container > .panel:not(.drawing-panel) {
+  .main-container>.panel:not(.drawing-panel) {
     display: none !important;
   }
 
-  .main-container > .panel.drawing-panel {
+  .main-container>.panel.drawing-panel {
     display: block !important;
   }
 
@@ -997,7 +1004,6 @@ body.modal-open {
 
   .button-group.mobile-only {
     display: flex !important;
-    flex-direction: column;
     width: 100%;
   }
 
@@ -1115,8 +1121,10 @@ body.modal-open {
 
 /* --- 수정된 폰트 크기를 위한 미디어 쿼리 끝 --- */
 
+
 /* Hide mobile elements on larger screens */
 @media (min-width: 1201px) {
+
   .mobile-modal,
   .mobile-bottom-nav {
     display: none !important;
@@ -1194,9 +1202,7 @@ body.modal-open {
   min-width: 200px;
 }
 
-.search-input-and-type-filters-container
-  .search-input-container
-  input[type="text"] {
+.search-input-and-type-filters-container .search-input-container input[type="text"] {
   width: 100%;
   padding: 10px;
   font-size: 1em;
@@ -1712,9 +1718,9 @@ body.modal-open {
 }
 
 /* --- Label styles for radical, shape, stroke count, and unicode info --- */
-.radical-row > span:first-child,
-.shape-row > span:first-child,
-.kanji-meta-row > span:first-child,
+.radical-row>span:first-child,
+.shape-row>span:first-child,
+.kanji-meta-row>span:first-child,
 .meta-label {
   color: #0066cc;
   font-weight: bold;
